@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 int fd;
 long xres;
@@ -35,10 +36,10 @@ void init_graphics(){
   screenMem = (char *) mmap (NULL, yres*size, PROT_WRITE, MAP_SHARED, fd, 0);
   //Map the size of the screen into memory
 
-  ioctl("/dev/tty0",TCGETS, &terminalSettings);
+  ioctl(STDIN_FILENO,TCGETS, &terminalSettings);
   terminalSettings.c_lflag &= ~ICANON;
   terminalSettings.c_lflag &= ~ECHO;
-  ioctl("/dev/tty0",TCSETS, &terminalSettings);
+  ioctl(STDIN_FILENO,TCSETS, &terminalSettings);
   //Disable cannoical and echo mode
 
   //typedef unsigned short color_t;
