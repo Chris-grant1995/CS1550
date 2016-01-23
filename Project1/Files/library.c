@@ -7,7 +7,7 @@
 #include <sys/select.h>
 #include <linux/fb.h>
 #include <termios.h>
-
+#include <unistd.h>
 
 int fd;
 long xres;
@@ -56,7 +56,7 @@ void exit_graphics(){
 }
 void clear_screen(){
   write(fd,"\033[2J",8);
-  //Write those 8 bytes to our fd 
+  //Write those 8 bytes to our fd
 }
 char getkey(){
   //select() to block for 0 seconds
