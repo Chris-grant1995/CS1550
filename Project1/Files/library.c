@@ -8,6 +8,8 @@
 #include <linux/fb.h>
 #include <termios.h>
 #include <unistd.h>
+#include <sys/mman.h>
+#include <fcntl.h>
 
 int fd;
 long xres;
@@ -30,7 +32,7 @@ void init_graphics(){
   yres = screenInfo.yres_virtual;
   size = bitDepth.line_length;
   //Get size of the screen
-  screenMem = (char *) mmap (null, yres*size, PROT_WRITE, MAP_SHARED, fd, 0);
+  screenMem = (char *) mmap (NULL, yres*size, PROT_WRITE, MAP_SHARED, fd, 0);
   //Map the size of the screen into memory
 
   ioctl("/dev/tty0",TCGETS, &terminalSettings);
@@ -62,7 +64,7 @@ char getkey(){
   //select() to block for 0 seconds
 }
 void sleep_ms(long ms){
-  nanosleep(ms*1000000, null);
+  nanosleep(ms*1000000, NULL);
 }
 void draw_pixel(int x, int y, color_t color){
   //Get appropirate position in memory for X and Y
