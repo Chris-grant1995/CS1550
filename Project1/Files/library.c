@@ -11,7 +11,9 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdio.h>
 
+typedef unsigned short color_t;
 int fd;
 long xres;
 long yres;
@@ -41,7 +43,7 @@ void init_graphics(){
   terminalSettings.c_lflag &= ~ECHO;
   ioctl(STDIN_FILENO,TCSETS, &terminalSettings);
   //Disable cannoical and echo mode
-
+  printf("Done!\n");
   //typedef unsigned short color_t;
   // First 5 bits are red, next 6 are green, final 5 are blue
 
@@ -49,23 +51,44 @@ void init_graphics(){
   clear_screen();
 }
 void exit_graphics(){
+  struct termios terminalSettings;
+  ioctl(STDIN_FILENO,TCGETS, &terminalSettings);
+  terminalSettings.c_lflag |= ICANON;
+  terminalSettings.c_lflag |= ECHO;
+  ioctl(STDIN_FILENO,TCSETS, &terminalSettings);
   //Enable echo and canotical mode
-  //TCgets and TCSets
-
+  munmap(screenMem, yres*size);
   //Use munmap to unmap the memory
-
+  close(fd);
   //Close frame buffer
 
 }
 void clear_screen(){
-  write(fd,"\033[2J",8);
+  write(1,"\033[2J",8);
   //Write those 8 bytes to our fd
 }
 char getkey(){
-  //select() to block for 0 seconds
+  fd_set fdset;
+	struct timeval timeout;
+	int pressed;
+	char ch;
+	FD_ZERO(&fdset);
+	FD_SET( STDIN_FILENO, &fdset );
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 0;
+	pressed = select( STDIN_FILENO+1, &fdset, NULL, NULL, &timeout );
+	if( pressed > 0 )
+	{
+		read( 0, &ch, sizeof(ch) );
+	}
+	return ch;
+
 }
 void sleep_ms(long ms){
-  nanosleep(ms*1000000, NULL);
+  struct timespec timer;
+  //timer.tv_sec =0;
+  timer.tv_nsec = ms*1000000;
+  nanosleep(&timer, NULL);
 }
 void draw_pixel(int x, int y, color_t color){
   //Get appropirate position in memory for X and Y
