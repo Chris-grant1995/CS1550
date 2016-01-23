@@ -1,22 +1,49 @@
 #include "iso_font.h"
 #include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/select.h>
+#include <linux/fb.h>
+#include <termios.h>
 
+
+int fd;
+long xres;
+long yres;
+long size;
+char * screenMem;
 void init_graphics(){
-  open("/dev/fb0");
-  //Read and write
-  ioctl(FBIOGET_VSCREENINFO,FBIOGET_FSCREENINFO);
-  //Get size of the screen
 
-  mmap(MAP_SHARED);
+  struct fb_var_screeninfo screenInfo;
+  struct fb_fix_screeninfo bitDepth;
+  struct termios terminalSettings;
+
+  fd = open("/dev/fb0", O_RDWR);
+  //Read and write
+
+  ioctl(fd, FBIOGET_VSCREENINFO, &screenInfo);
+  ioctl(fd, FBIOGET_FSCREENINFO, &bitDepth);
+
+  xres = screenInfo.xres_virtual;
+  yres = screenInfo.yres_virtual;
+  size = bitDepth.line_length;
+  //Get size of the screen
+  screenMem = (char *) mmap (null, yres*size, PROT_WRITE, MAP_SHARED, fd, 0);
   //Map the size of the screen into memory
 
-  ioctl(echo,TCGets, cannoical);
-  ioctl(echo, TCSets, cannoical);
+  ioctl("/dev/tty0",TCGETS, &terminalSettings);
+  terminalSettings.c_lflag &= ~ICANON;
+  terminalSettings.c_lflag &= ~ECHO;
+  ioctl("/dev/tty0",TCSETS, &terminalSettings);
   //Disable cannoical and echo mode
 
-  typedef unsigned short color_t;
+  //typedef unsigned short color_t;
   // First 5 bits are red, next 6 are green, final 5 are blue
 
+  //Ready to go, clear the screen
+  clear_screen();
 }
 void exit_graphics(){
   //Enable echo and canotical mode
@@ -28,7 +55,8 @@ void exit_graphics(){
 
 }
 void clear_screen(){
-  //write(“\033[2J”)
+  write(fd,"\033[2J",8);
+  //Write those 8 bytes to our fd 
 }
 char getkey(){
   //select() to block for 0 seconds
