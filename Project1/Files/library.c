@@ -18,7 +18,7 @@ int fd;
 long xres;
 long yres;
 long size;
-char * screenMem;
+unsigned short * screenMem;
 void init_graphics(){
 
   struct fb_var_screeninfo screenInfo;
@@ -35,7 +35,7 @@ void init_graphics(){
   yres = screenInfo.yres_virtual;
   size = bitDepth.line_length;
   //Get size of the screen
-  screenMem = (char *) mmap (NULL, yres*size, PROT_WRITE, MAP_SHARED, fd, 0);
+  screenMem = (unsigned short *) mmap (NULL, yres*size, PROT_WRITE, MAP_SHARED, fd, 0);
   //Map the size of the screen into memory
 
   ioctl(STDIN_FILENO,TCGETS, &terminalSettings);
@@ -51,6 +51,7 @@ void init_graphics(){
   clear_screen();
 }
 void exit_graphics(){
+  clear_screen();
   struct termios terminalSettings;
   ioctl(STDIN_FILENO,TCGETS, &terminalSettings);
   terminalSettings.c_lflag |= ICANON;
@@ -93,32 +94,61 @@ void sleep_ms(long ms){
 void draw_pixel(int x, int y, color_t color){
   //Get appropirate position in memory for X and Y
   //cast the position to the color
+  if(x < 0 || x >= xres)
+	{
+		if(y < 0 || y >= yres)
+		{
+		return;
+		}
+	}
+ 	unsigned long v_o = (size/2) * y;
+	unsigned long h_o = x;
+	unsigned short *s_ptr = (screenMem + v_o + h_o);
+	*s_ptr = color;
+
 
 }
 void draw_rect(int x1, int y1, int width, int height, color_t c){
-  int i = 0;
-  int x = 0;
-  for(i =0; i < height; i++ ){
-    for(x =0; x< width; x++){
-      if(i == 0 || i == height -1){
-
-      }
-      else{
-        draw_pixel(x1, x, c);
-        draw_pixel(width-1, x,c);
-      }
-    }
+  int vert =0;
+  int hori = 0;
+  for(hori = x1; hori < width+x1; hori++){
+    draw_pixel(hori,y1,c);
+    draw_pixel(hori,y1+height,c);
+  }
+  for(vert =y1; vert<height+y1; vert++){
+    draw_pixel(x1, vert, c);
+    draw_pixel(x1+width, vert,c);
   }
 }
 void fill_rect(int x1, int y1, int width, int height, color_t c){
   int i = 0;
   int x = 0;
-  for(i =0; i < height; i++ ){
-    for(x =0; x< width; x++){
-      draw_pixel(x,i,c);
+  for(i =x1; i < height+x1; i++ ){
+    for(x =y1; x< width+y1; x++){
+      draw_pixel(i,x,c);
     }
+
   }
 }
 void draw_text(int x, int y, const char *text, color_t  c){
+  int counter =0;
+  while(text[counter] != '\0'){
+    draw_char(x,y,text[counter], c);
+    x+=8;
+    counter++;
+  }
+}
+void draw_char(int x, int y, char ch, color_t c){
+  int letter = (int) ch;
+  int i=0;
+  int j=0;
+  for( i =0; i<16; i++ ){
+    unsigned char row = iso_font[letter*16+i];
+    for( j =0; j<8; j++){
+      if((row >> (j))& 1 == 1){
+        draw_pixel(x+j, y+i, c);
+      }
 
+    }
+  }
 }
