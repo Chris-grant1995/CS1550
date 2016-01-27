@@ -87,7 +87,7 @@ char getkey(){
 }
 void sleep_ms(long ms){
   struct timespec timer;
-  //timer.tv_sec =0;
+  timer.tv_sec =0;
   timer.tv_nsec = ms*1000000;
   nanosleep(&timer, NULL);
 }
