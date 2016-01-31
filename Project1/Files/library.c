@@ -11,7 +11,6 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdio.h>
 
 typedef unsigned short color_t;
 int fd;
@@ -43,7 +42,6 @@ void init_graphics(){
   terminalSettings.c_lflag &= ~ECHO;
   ioctl(STDIN_FILENO,TCSETS, &terminalSettings);
   //Disable cannoical and echo mode
-  printf("Done!\n");
   //typedef unsigned short color_t;
   // First 5 bits are red, next 6 are green, final 5 are blue
 
@@ -96,11 +94,12 @@ void draw_pixel(int x, int y, color_t color){
   //cast the position to the color
   if(x < 0 || x >= xres)
 	{
-		if(y < 0 || y >= yres)
-		{
 		return;
-		}
 	}
+  if(y < 0 || y >= yres)
+  {
+    return;
+  }
  	unsigned long v_o = (size/2) * y;
 	unsigned long h_o = x;
 	unsigned short *s_ptr = (screenMem + v_o + h_o);
