@@ -18,6 +18,10 @@ long xres;
 long yres;
 long size;
 unsigned short * screenMem;
+void clear_screen(){
+  write(1,"\033[2J",8);
+  //Write those 8 bytes to our fd
+}
 void init_graphics(){
 
   struct fb_var_screeninfo screenInfo;
@@ -62,10 +66,7 @@ void exit_graphics(){
   //Close frame buffer
 
 }
-void clear_screen(){
-  write(1,"\033[2J",8);
-  //Write those 8 bytes to our fd
-}
+
 char getkey(){
   fd_set fdset;
 	struct timeval timeout;
@@ -100,10 +101,10 @@ void draw_pixel(int x, int y, color_t color){
   {
     return;
   }
- 	unsigned long v_o = (size/2) * y;
-	unsigned long h_o = x;
-	unsigned short *s_ptr = (screenMem + v_o + h_o);
-	*s_ptr = color;
+ 	unsigned long v = (size/2) * y;
+	unsigned long h = x;
+	unsigned short *s = (screenMem + v + h);
+	*s = color;
 
 
 }
@@ -129,14 +130,6 @@ void fill_rect(int x1, int y1, int width, int height, color_t c){
 
   }
 }
-void draw_text(int x, int y, const char *text, color_t  c){
-  int counter =0;
-  while(text[counter] != '\0'){
-    draw_char(x,y,text[counter], c);
-    x+=8;
-    counter++;
-  }
-}
 void draw_char(int x, int y, char ch, color_t c){
   int letter = (int) ch;
   int i=0;
@@ -149,5 +142,13 @@ void draw_char(int x, int y, char ch, color_t c){
       }
 
     }
+  }
+}
+void draw_text(int x, int y, const char *text, color_t  c){
+  int counter =0;
+  while(text[counter] != '\0'){
+    draw_char(x,y,text[counter], c);
+    x+=8;
+    counter++;
   }
 }

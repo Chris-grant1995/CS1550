@@ -27,7 +27,8 @@ int main(){
     else if(key == 'd') x+=10; // Thanks Professor Misurda
     else if(key == '1') c = 0xFFFF;
     else if(key == '2') c = 16;
-
+    else if(key == '3') c = 0xF000;
+    else if (key == '4') c = 0x03F0;
 
     draw_rect(100,50, 538, 428, 0xFFFF);
     fill_rect(x,y, 25,25, c);
@@ -37,6 +38,10 @@ int main(){
     draw_char(137,30,'1', 0xFFFF);
     fill_rect(150,2, 25,25, 16);
     draw_char(165,30,'2', 0xFFFF);
+    fill_rect(175,2, 25,25, 0xF000);
+    draw_char(190,30,'3', 0xFFFF);
+    fill_rect(200,2, 25,25, 0x03F0);
+    draw_char(210,30,'4', 0xFFFF);
 
     draw_text(10,100, "Hello!", 0xFFFF);
     draw_text(10,115, "Welcome to ", 0xFFFF);
@@ -50,6 +55,7 @@ int main(){
     draw_text(10,235, "At the top!", 0xFFFF);
     draw_text(10,250, "And Press Q", 0xFFFF);
     draw_text(10,265, "To Quit!", 0xFFFF);
+
 
 
 
