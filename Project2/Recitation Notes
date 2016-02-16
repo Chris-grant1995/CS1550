@@ -1,0 +1,39 @@
+Project 2
+Prodcons.c <-- User level program that solves producer and consumer Problem
+Kernel
+  Sys.c
+    Write up and down
+    long sys_cs1550_down
+    long sys_cs1550_up
+  Syscall_table.s
+    Simply add our syscalls to the end of the file
+  unistd.h
+    #define up 326
+    #define down 325
+
+3 Semiphores
+  Empty = n;
+  full =0;
+  mutex = 0;
+
+  Up(semiphore)
+      S.value ++;
+  Down(semiphore )
+    while(s<=0);
+    s--;
+
+Producer
+  down(empty)
+  down(mutex)
+  //Produce Stuff
+  up(mutex)
+  up(full)
+Consumer
+  down(full)
+  down(mutex)
+  //Consume
+  up(mutex)
+  up(empty)
+semophore
+  int VALUE
+  Queue of waiting processes
