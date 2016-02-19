@@ -68,7 +68,7 @@ int main(int argc, char *argv[]){
         //Put item into buffer, increment pointer, and print
         produced = *producerPointer;
         bufferPointer[*producerPointer] = produced
-        printf("Producer %c Produced: %d\n", i+65, item);
+        printf("Producer %c Produced: %d\n", i+65, produced);
         *producerPointer++;
         *producerPointer %= bufferSize; //Incase we go over the size of the buffer
         //Unlock mutex
@@ -80,4 +80,20 @@ int main(int argc, char *argv[]){
   }
 
   //Consume Now
+  i=0;
+  for(; i<cons; i++){
+    if(fork()==0){
+      int consumed;
+      while (TRUE) {
+        down(full);
+        down(mutex);
+        consumed = bufferPointer[*consumerPointer];
+        printf("Consumer %c Consumed %d\n", i+65, consumed);
+        *consumerPointer++;
+        *consumerPointer %= bufferSize;
+        up(mutex);
+        up(empty);
+      }
+    }
+  }
 }
