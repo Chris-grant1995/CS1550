@@ -8,17 +8,20 @@
 #define TRUE 1
 #define FALSE 0
 
-struct semaphore{
+struct cs1550_sem{
   int val;
   Node s*;
   Node e*;
 };
 
-void down(struct semaphore s){
+void down(struct cs1550_sem s){
   //Calls down syscall
+
+  syscall(__NR_cs1550_down, sem);
 }
-void up(struct semaphore s){
+void up(struct cs1550_sem s){
   //Calls up syscall
+  syscall(__NR_cs1550_up, sem);
 }
 
 int main(int argc, char *argv[]){
@@ -30,11 +33,11 @@ int main(int argc, char *argv[]){
   int cons = atoi(argv[2]);
   int bufferSize = atoi(argv[3]);
   // Need to allocate memory for 3 semaphores, full, empty and mutex
-  void* semaphores = mmap(NULL, sizeof(struct semaphore) * 3, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, 0, 0);
+  void* semaphores = mmap(NULL, sizeof(struct cs1550_sem) * 3, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, 0, 0);
 
-  struct semaphore * full = (struct semaphore* )semaphores;
-  struct semaphore * empty = (struct semaphore* )semaphores+1;
-  struct semaphore * mutex = (struct semaphore* )semaphores+2;
+  struct cs1550_sem * full = (struct cs1550_sem* )semaphores;
+  struct cs1550_sem * empty = (struct cs1550_sem* )semaphores+1;
+  struct cs1550_sem * mutex = (struct cs1550_sem* )semaphores+2;
 
   //Allocate space for buffer, plus 2 for next producing and consuming locations
   void* buffer = mmap(NULL, sizeof(int)*(bufferSize + 2), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, 0, 0);
