@@ -2367,8 +2367,8 @@ struct Node
 //Node for process queue linked list
 struct cs1550_sem{
   int val;
-  Node *s;
-  Node *e;
+  struct Node * s;
+  struct Node * e;
 };
 //Semaphore, with value, start of linked list, end of linked list
 
