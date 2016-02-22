@@ -2384,7 +2384,7 @@ asmlinkage long sys_cs1550_down(struct cs1550_sem *sem){
 		n->task = current;
 		//current is the global for the current process
 		if(sem->s != NULL){
-			sem->e->s = n;
+			sem->e->nextNode = n;
 			//If the list is not empty, put it at the end and the start
 		}
 		else{
