@@ -10,16 +10,16 @@
 
 struct cs1550_sem{
   int val;
-  Node s*;
-  Node e*;
+  struct Node *s;
+  struct Node *e;
 };
 
-void down(struct cs1550_sem s){
+void down(struct cs1550_sem * s){
   //Calls down syscall
 
   syscall(__NR_cs1550_down, sem);
 }
-void up(struct cs1550_sem s){
+void up(struct cs1550_sem *s){
   //Calls up syscall
   syscall(__NR_cs1550_up, sem);
 }
@@ -52,14 +52,14 @@ int main(int argc, char *argv[]){
 
   //Set semaphore values
   full->val = 0;
-  full->start = NULL;
-  full->end = NULL;
-  mutex->value = 1;
-  mutex->start = NULL;
-  mutex->end = NULL;
-  empty->value = bufferSize;
-  empty->start = NULL;
-  empty->end = NULL;
+  full->s = NULL;
+  full->e = NULL;
+  mutex->val = 1;
+  mutex->s = NULL;
+  mutex->e = NULL;
+  empty->val = bufferSize;
+  empty->s = NULL;
+  empty->e = NULL;
 
   int i = 0;
   for(; i<prods; i++){
