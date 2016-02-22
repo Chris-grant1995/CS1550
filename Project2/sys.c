@@ -2376,9 +2376,9 @@ asmlinkage long sys_cs1550_down(struct cs1550_sem *sem){
 	spin_lock(&sem_lock);
 	//Start spinlock
 	sem->val--;
-	if(sem->value < 0){
+	if(sem->val < 0){
 		//Start adding process to the queue
-		struct Node n = (struct Node *)kmalloc(sizeof(struct Node), GFP_KERNEL);
+		struct Node *n = (struct Node *)kmalloc(sizeof(struct Node), GFP_KERNEL);
 
 		n->nextNode = NULL;
 		n->task = current;
