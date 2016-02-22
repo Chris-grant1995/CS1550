@@ -17,11 +17,11 @@ struct cs1550_sem{
 void down(struct cs1550_sem * s){
   //Calls down syscall
 
-  syscall(__NR_cs1550_down, sem);
+  syscall(__NR_cs1550_down, s);
 }
 void up(struct cs1550_sem *s){
   //Calls up syscall
-  syscall(__NR_cs1550_up, sem);
+  syscall(__NR_cs1550_up, s);
 }
 
 int main(int argc, char *argv[]){
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]){
         down(mutex);
         //Put item into buffer, increment pointer, and print
         produced = *producerPointer;
-        bufferPointer[*producerPointer] = produced
+        bufferPointer[*producerPointer] = produced;
         printf("Producer %c Produced: %d\n", i+65, produced);
         *producerPointer++;
         *producerPointer %= bufferSize; //Incase we go over the size of the buffer
