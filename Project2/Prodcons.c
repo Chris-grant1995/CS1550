@@ -65,6 +65,7 @@ int main(int argc, char *argv[]){
   int i = 0;
   for(; i<prods; i++){
     if(fork() == 0){
+      printf("Hello from the producer\n");
       int produced;
       while (TRUE) {
         down(full);
