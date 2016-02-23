@@ -29,6 +29,7 @@ int main(int argc, char *argv[]){
     printf("Usage: number of producers, num of consumers, buffer size\n");
     return -1;
   }
+  printf("Test");
   int prods = atoi(argv[1]);
   int cons = atoi(argv[2]);
   int bufferSize = atoi(argv[3]);
