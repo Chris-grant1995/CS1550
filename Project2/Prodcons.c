@@ -69,7 +69,7 @@ int main(int argc, char *argv[]){
       int produced;
       while (TRUE) {
         printf("Where do we die?2\n");
-        down(full);
+        down(empty);
         down(mutex);
         printf("Locked\n");
         //Put item into buffer, increment pointer, and print
