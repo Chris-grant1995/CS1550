@@ -68,6 +68,7 @@ int main(int argc, char *argv[]){
       printf("Hello from the producer\n");
       int produced;
       while (TRUE) {
+        printf("Where do we die?2\n");
         down(full);
         down(mutex);
         //Put item into buffer, increment pointer, and print
@@ -88,6 +89,7 @@ int main(int argc, char *argv[]){
   i=0;
   for(; i<cons; i++){
     if(fork()==0){
+      printf("Hello from the consumer\n");
       int consumed;
       while (TRUE) {
         down(full);
