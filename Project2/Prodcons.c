@@ -71,8 +71,10 @@ int main(int argc, char *argv[]){
         printf("Where do we die?2\n");
         down(full);
         down(mutex);
+        printf("Locked\n");
         //Put item into buffer, increment pointer, and print
         produced = *producerPointer;
+
         bufferPointer[*producerPointer] = produced;
         printf("Producer %c Produced: %d\n", i+65, produced);
         *producerPointer++;
