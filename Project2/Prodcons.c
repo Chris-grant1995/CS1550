@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
     printf("Usage: number of producers, num of consumers, buffer size\n");
     return -1;
   }
-  printf("Test");
+  printf("Test\n");
   int prods = atoi(argv[1]);
   int cons = atoi(argv[2]);
   int bufferSize = atoi(argv[3]);
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]){
   empty->val = bufferSize;
   empty->s = NULL;
   empty->e = NULL;
-
+  printf("Where do we die?\n");
   int i = 0;
   for(; i<prods; i++){
     if(fork() == 0){
