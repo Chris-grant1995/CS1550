@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
     printf("Usage: number of producers, num of consumers, buffer size\n");
     return -1;
   }
-  printf("Test\n");
+  //printf("Test\n");
   int prods = atoi(argv[1]);
   int cons = atoi(argv[2]);
   int bufferSize = atoi(argv[3]);
@@ -61,17 +61,17 @@ int main(int argc, char *argv[]){
   empty->val = bufferSize;
   empty->s = NULL;
   empty->e = NULL;
-  printf("Where do we die?\n");
+  //printf("Where do we die?\n");
   int i = 0;
   for(; i<prods; i++){
     if(fork() == 0){
-      printf("Hello from the producer\n");
+      //printf("Hello from the producer\n");
       int produced;
       while (TRUE) {
-        printf("Where do we die?2\n");
+        //printf("Where do we die?2\n");
         down(empty);
         down(mutex);
-        printf("Locked\n");
+        //printf("Locked\n");
         //Put item into buffer, increment pointer, and print
         produced = *producerPointer;
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]){
   i=0;
   for(; i<cons; i++){
     if(fork()==0){
-      printf("Hello from the consumer\n");
+      //printf("Hello from the consumer\n");
       int consumed;
       while (TRUE) {
         down(full);
