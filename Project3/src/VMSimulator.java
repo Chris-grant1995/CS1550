@@ -7,7 +7,7 @@ public class VMSimulator {
     }
 
     public void opt(int frames, String tracefile){
-
+        System.out.println("Test");
     }
     public void clock(int frames, String tracefile){
 
