@@ -1,9 +1,11 @@
+import java.io.FileNotFoundException;
+
 /**
  * Created by christophergrant on 3/20/16.
  * Usage: vmsim –n <numframes> -a <opt|clock|nru|aging> [-r <refresh>] <tracefile>
  */
 public class vmsim {
-    public static void main(String[] args){
+    public static void main(String[] args) throws FileNotFoundException {
 
         int frameNo = 0;
         String algo = "";
