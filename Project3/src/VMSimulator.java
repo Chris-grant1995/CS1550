@@ -38,7 +38,7 @@ public class VMSimulator {
         int cur = 0; // current frame
         while (scan.hasNext()){
             String[] line = scan.nextLine().split(" ");
-            int pageNum = Integer.decode("0x" + line[0]);
+            int pageNum = Integer.decode("0x" + line[0].substring(0,5)); // 0,5 Because our page table doesn't support 8 hex digits worth of addresses 
             PTE entry = pageTable.get(pageNum);
         }
         System.out.println("Done");
