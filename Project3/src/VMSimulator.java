@@ -1,6 +1,8 @@
 /**
  * Created by christophergrant on 3/20/16.
  */
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 public class VMSimulator {
@@ -16,13 +18,13 @@ public class VMSimulator {
 
 
     }
-    public void clock(int frames, String tracefile){
+    public void clock(int frames, String tracefile)throws FileNotFoundException{
         int memaccess =0;
         int pageFaults = 0;
         int writes =0;
         int[] pageFrames = new int[frames];
         ArrayList<PTE> pageTable = new ArrayList<>();
-        Scanner scan = new Scanner(tracefile);
+        Scanner scan = new Scanner(new File(tracefile));
 
         int hands = 0;
         System.out.println("Creating pageTable");
