@@ -88,12 +88,13 @@ public class VMSimulator {
                     evict.frame = -1;
                     pageTable.put(pageToEvict,entry);
                 }
-                pageTable.put(pageNum,entry);
-                memaccess++;
+
             }
             else {
                 System.out.println("NoPageFault");
             }
+            pageTable.put(pageNum,entry);
+            memaccess++;
         }
         System.out.println("Done");
         System.out.println("Clock");
