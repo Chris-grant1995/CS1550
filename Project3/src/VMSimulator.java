@@ -55,7 +55,7 @@ public class VMSimulator {
                     entry.frame = cur;
                     entry.v = true;
                     cur++;
-                    System.out.println(line[0] + " (hit)");
+
                 }
                 else{
                     //Evicting
@@ -90,6 +90,9 @@ public class VMSimulator {
                 }
                 pageTable.put(pageNum,entry);
                 memaccess++;
+            }
+            else {
+                System.out.println("NoPageFault");
             }
         }
         System.out.println("Done");
