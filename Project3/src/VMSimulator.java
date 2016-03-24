@@ -179,6 +179,9 @@ public class VMSimulator {
                             }
 
                         }
+                        if(pageToEvict == null){
+                            System.out.println("Uh oh");
+                        }
                         entry.frame = pageToEvict.frame;
                         if(pageToEvict.dirty){
                             writes++;
@@ -198,6 +201,7 @@ public class VMSimulator {
             pageTable.put(pageNum,entry);
             memaccess++;
         }
+
     }
     public void aging(int frames, String tracefile, int refresh){
         int memaccess =0;
