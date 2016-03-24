@@ -15,7 +15,7 @@ public class PTE {
         dirty = false;
         reference = false;
     }
-    public void copy(PTE entry){
+    public PTE(PTE entry){
         frame = entry.frame;
         i = entry.i;
         v = entry.v;

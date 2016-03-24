@@ -166,15 +166,15 @@ public class VMSimulator {
                             }
                             else{
                                 if(!temp.reference && temp.dirty && temp.v){
-                                    pageToEvict.copy(temp);
+                                    pageToEvict = new PTE(temp);
                                     //continue;
                                 }
-                                else if(temp.reference && !temp.dirty && temp.v && pageToEvict == null){
-                                    pageToEvict.copy(temp);
+                                    else if(temp.reference && !temp.dirty && temp.v && pageToEvict == null){
+                                        pageToEvict = new PTE(temp);
                                     //continue;
                                 }
                                 else if(temp.reference && temp.dirty && temp.v && pageToEvict == null){
-                                    pageToEvict.copy(temp);
+                                    pageToEvict = new PTE(temp);
                                 }
                             }
 
