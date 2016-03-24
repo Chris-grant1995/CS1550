@@ -91,7 +91,7 @@ public class VMSimulator {
 
             }
             else {
-                System.out.println("NoPageFault");
+                //System.out.println("NoPageFault");
             }
             pageTable.put(pageNum,entry);
             memaccess++;
@@ -112,7 +112,7 @@ public class VMSimulator {
         HashMap<Integer,PTE> pageTable = new HashMap<>();
 
         System.out.println("Creating Page Table");
-        for (int i =0; i< 1024*1024){
+        for (int i =0; i< 1024*1024; i++){
             PTE temp = new PTE();
             pageTable.put(i,temp);
         }
@@ -146,7 +146,7 @@ public class VMSimulator {
                     cur++;
                 }
                 else{
-                    int pageToEvict = 0;
+                    PTE pageToEvict = null;
                     boolean found = false;
                     while(!found){
                         for(int i =0; i<frames; i++){
@@ -161,12 +161,42 @@ public class VMSimulator {
                                 pageTable.put(temp.i, temp);
                                 entry.v = true;
                                 pageTable.put(entry.i, entry);
-                                found = true;
+                                //found = true;
+                                break;
                             }
+                            else{
+                                if(!temp.reference && temp.dirty && temp.v){
+                                    pageToEvict.copy(temp);
+                                    //continue;
+                                }
+                                else if(temp.reference && !temp.dirty && temp.v && pageToEvict == null){
+                                    pageToEvict.copy(temp);
+                                    //continue;
+                                }
+                                else if(temp.reference && temp.dirty && temp.v && pageToEvict == null){
+                                    pageToEvict.copy(temp);
+                                }
+                            }
+
                         }
+                        entry.frame = pageToEvict.frame;
+                        if(pageToEvict.dirty){
+                            writes++;
+                        }
+                        pageFrames[entry.frame] = entry.i;
+                        pageToEvict.v = false;
+                        pageToEvict.dirty = false;
+                        pageToEvict.frame = -1;
+                        pageToEvict.reference = false;
+                        pageTable.put(pageToEvict.i, pageToEvict);
+                        entry.v = true;
+                        pageTable.put(entry.i, entry);
+                        found = true;
                     }
                 }
             }
+            pageTable.put(pageNum,entry);
+            memaccess++;
         }
     }
     public void aging(int frames, String tracefile, int refresh){
