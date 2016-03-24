@@ -204,6 +204,11 @@ public class VMSimulator {
             pageTable.put(pageNum,entry);
             memaccess++;
         }
+        System.out.println("NRU");
+        System.out.println("Number of Frames: "+ frames);
+        System.out.println("Total Memory Accesses: "+ memaccess);
+        System.out.println("Total Page Faults "+ pageFaults);
+        System.out.println("Total Writes to Disk "+ writes);
 
     }
     public void aging(int frames, String tracefile, int refresh){
