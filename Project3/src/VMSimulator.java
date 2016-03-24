@@ -161,7 +161,7 @@ public class VMSimulator {
                                 pageTable.put(temp.i, temp);
                                 entry.v = true;
                                 pageTable.put(entry.i, entry);
-                                //found = true;
+                                found = true;
                                 break;
                             }
                             else{
@@ -178,6 +178,9 @@ public class VMSimulator {
                                 }
                             }
 
+                        }
+                        if(found){
+                            break;
                         }
                         if(pageToEvict == null){
                             System.out.println("Uh oh");
