@@ -316,10 +316,11 @@ public class VMSimulator {
                         history[i] += 128;
                     }
                     //Thread.sleep(2000);
+                    String s2 = String.format("%8s", Integer.toBinaryString(history[i] & 0xFF)).replace(' ', '0');
+                    System.out.println("Pos " + i + " Reference: " + temp.reference + " History: " + s2);
                     temp.reference = false;
                     pageTable.put(temp.i, temp);
-                    String s2 = String.format("%8s", Integer.toBinaryString(history[i] & 0xFF)).replace(' ', '0');
-                    System.out.println(s2);
+
 
                 }
             }
@@ -355,7 +356,7 @@ public class VMSimulator {
                         }
                     }
                     //Thread.sleep(1000);
-                    System.out.println("Min: " + min);
+                    //System.out.println("Min: " + min);
                     int pageToEvict = pageFrames[indexMin];
                     evict = new PTE(pageTable.get(pageFrames[indexMin]));
                     if(evict.dirty){
