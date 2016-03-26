@@ -320,7 +320,8 @@ public class VMSimulator {
                     }
                     temp.reference = false;
                     pageTable.put(temp.i, temp);
-                    System.out.println(history[i]);
+                    String s2 = String.format("%8s", Integer.toBinaryString(history[i] & 0xFF)).replace(' ', '0');
+                    System.out.println(s2);
 
                 }
             }
