@@ -60,7 +60,7 @@ public class VMSimulator {
                     //Evicting
                     int maxDist = getLongestDist(pageFrames, future);
                     PTE evict = pageTable.get(maxDist);
-                    if(entry.dirty){
+                    if(evict.dirty){
                         writes++;
                     }
                     pageFrames[evict.frame] = entry.i;
