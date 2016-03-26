@@ -323,7 +323,6 @@ public class VMSimulator {
                     System.out.println(history[i]);
 
                 }
-                return; // Temp Obviously
             }
             String[] line = scan.nextLine().split(" ");
             int pageNum = Integer.decode("0x" + line[0].substring(0, 5));
