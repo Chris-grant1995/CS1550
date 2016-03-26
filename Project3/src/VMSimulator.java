@@ -308,6 +308,7 @@ public class VMSimulator {
         while (scan.hasNext()) {
             if (memaccess % refresh == 0) {
                 System.out.println("Aging!");
+                System.out.println("Cur:" + cur);
                 for (int i = 0; i < cur; i++) {
                     PTE temp = pageTable.get(pageFrames[i]);
                     history[i] = history[i] >>> 1;
