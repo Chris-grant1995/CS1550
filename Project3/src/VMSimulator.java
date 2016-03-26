@@ -366,9 +366,10 @@ public class VMSimulator {
                     pageTable.put(pageToEvict,evict);
 
                 }
-                pageTable.put(pageNum, entry);
-                memaccess++;
+
             }
+            pageTable.put(pageNum, entry);
+            memaccess++;
         }
             System.out.println("Aging");
             System.out.println("Number of Frames: " + frames);
