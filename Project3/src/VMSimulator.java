@@ -313,7 +313,7 @@ public class VMSimulator {
             if (memaccess % refresh == 0) {
                 for (int i = 0; i < cur; i++) {
                     PTE temp = pageTable.get(pageFrames[i]);
-                    int t = history[i] >> 1;
+                    int t = history[i] >>> 1;
                     history[i] = (byte) t; //Why the hell do I need to do it like this java
                     if (temp.reference) {
                         history[i] += 128;
