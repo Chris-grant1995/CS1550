@@ -32,7 +32,7 @@ public class vmsim {
         if(algo.equals("opt")){
             sim.opt(frameNo,trace);
         }
-        /*else if(algo.equals("clock")){
+        else if(algo.equals("clock")){
             sim.clock(frameNo, trace);
         }
         else if (algo.equals("nru")){
@@ -40,7 +40,7 @@ public class vmsim {
         }
         else if(algo.equals("aging")){
             sim.aging(frameNo,trace,refresh);
-        }*/
+        }
         else{
             System.out.println("Error");
         }

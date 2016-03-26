@@ -97,13 +97,13 @@ public class VMSimulator {
         }
         return index;
     }
-    /*
+    
     public void clock(int frames, String tracefile)throws FileNotFoundException{
         int memaccess =0;
         int pageFaults = 0;
         int writes =0;
         int[] pageFrames = new int[frames];
-        HashMap<Integer,PTE> pageTable = new HashMap<>();
+        Hashtable<Integer,PTE> pageTable = new Hashtable<>();
         Scanner scan = new Scanner(new File(tracefile));
 
         int hands = 0;
@@ -165,7 +165,7 @@ public class VMSimulator {
                     evict.reference = false;
                     evict.v = false;
                     evict.frame = -1;
-                    pageTable.put(pageToEvict,entry);
+                    pageTable.put(pageToEvict,evict);
                 }
 
             }
@@ -188,7 +188,7 @@ public class VMSimulator {
         int pageFaults = 0;
         int writes =0;
         int[] pageFrames = new int[frames];
-        HashMap<Integer,PTE> pageTable = new HashMap<>();
+        Hashtable<Integer,PTE> pageTable = new Hashtable<>();
 
         System.out.println("Creating Page Table");
         for (int i =0; i< 1024*1024; i++){
@@ -296,5 +296,5 @@ public class VMSimulator {
         int pageFaults = 0;
         int writes =0;
         int[] pageFrames = new int[frames];
-    }*/
+    }
 }
