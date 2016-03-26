@@ -353,7 +353,7 @@ public class VMSimulator {
                             indexMin =1;
                         }
                     }
-                    Thread.sleep(1000);
+                    //Thread.sleep(1000);
                     System.out.println("Min: " + min);
                     int pageToEvict = pageFrames[indexMin];
                     evict = new PTE(pageTable.get(pageFrames[indexMin]));
