@@ -352,7 +352,7 @@ public class VMSimulator {
                         }
                         if(min > copy[i]){
                             min = copy[i];
-                            indexMin =1;
+                            indexMin =i;
                         }
                     }
                     //Thread.sleep(1000);
