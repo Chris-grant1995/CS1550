@@ -311,15 +311,13 @@ public class VMSimulator {
                 for (int i = 0; i < cur; i++) {
                     PTE temp = pageTable.get(pageFrames[i]);
                     history[i] = history[i] >>> 1;
-                    String s2 = String.format("%8s", Integer.toBinaryString(history[i] & 0xFF)).replace(' ', '0');
-                    System.out.println(s2);
                     if (temp.reference) {
                         history[i] += 128;
                     }
-                    Thread.sleep(2000);
+                    //Thread.sleep(2000);
                     temp.reference = false;
                     pageTable.put(temp.i, temp);
-                    s2 = String.format("%8s", Integer.toBinaryString(history[i] & 0xFF)).replace(' ', '0');
+                    String s2 = String.format("%8s", Integer.toBinaryString(history[i] & 0xFF)).replace(' ', '0');
                     System.out.println(s2);
 
                 }
@@ -355,7 +353,8 @@ public class VMSimulator {
                             indexMin =1;
                         }
                     }
-                    //System.out.println("Min: " + min);
+                    Thread.sleep(1000);
+                    System.out.println("Min: " + min);
                     int pageToEvict = pageFrames[indexMin];
                     evict = new PTE(pageTable.get(pageFrames[indexMin]));
                     if(evict.dirty){
