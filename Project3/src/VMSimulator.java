@@ -4,7 +4,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.LinkedList;
-import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Scanner;
 public class VMSimulator {
     public VMSimulator(){
@@ -17,8 +17,8 @@ public class VMSimulator {
         int writes =0;
         int[] pageFrames = new int[frames];
 
-        HashMap<Integer, PTE> pageTable = new HashMap<>();
-        HashMap<Integer, LinkedList<Integer>> future = new HashMap<>();
+        Hashtable<Integer, PTE> pageTable = new Hashtable<>();
+        Hashtable<Integer, LinkedList<Integer>> future = new Hashtable<>();
         Scanner scan = new  Scanner(new File(tracefile));
         for(int i =0; i< 1024*1024; i++){
             PTE temp = new PTE();
@@ -83,7 +83,7 @@ public class VMSimulator {
         System.out.println("Total Page Faults "+ pageFaults);
         System.out.println("Total Writes to Disk "+ writes);
     }
-    public int getLongestDist(int [] pageFrames, HashMap<Integer, LinkedList<Integer>> future ){
+    public int getLongestDist(int [] pageFrames, Hashtable<Integer, LinkedList<Integer>> future ){
         int index =0;
         int maxDist = 0;
         for(int i =0; i<pageFrames.length; i++){
@@ -97,6 +97,7 @@ public class VMSimulator {
         }
         return index;
     }
+    /*
     public void clock(int frames, String tracefile)throws FileNotFoundException{
         int memaccess =0;
         int pageFaults = 0;
@@ -295,5 +296,5 @@ public class VMSimulator {
         int pageFaults = 0;
         int writes =0;
         int[] pageFrames = new int[frames];
-    }
+    }*/
 }
