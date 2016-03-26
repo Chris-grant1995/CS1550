@@ -70,7 +70,7 @@ public class VMSimulator {
                     evict.reference = false;
                     evict.v = false;
                     evict.frame = -1;
-                    pageTable.put(maxDist,entry);
+                    pageTable.put(maxDist,evict);
 
                 }
             }
