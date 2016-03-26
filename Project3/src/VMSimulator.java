@@ -3,6 +3,7 @@
  */
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Hashtable;
 import java.util.Scanner;
@@ -169,9 +170,6 @@ public class VMSimulator {
                 }
 
             }
-            else {
-                //System.out.println("NoPageFault");
-            }
             pageTable.put(pageNum,entry);
             memaccess++;
         }
@@ -261,9 +259,7 @@ public class VMSimulator {
                         if(found){
                             break;
                         }
-                        if(pageToEvict == null){
-                            System.out.println("Uh oh");
-                        }
+
                         entry.frame = pageToEvict.frame;
                         if(pageToEvict.dirty){
                             writes++;
@@ -297,7 +293,7 @@ public class VMSimulator {
         int writes = 0;
         int[] pageFrames = new int[frames];
         Hashtable<Integer, PTE> pageTable = new Hashtable<>();
-        byte[] history = new byte[frames];
+        int[] history = new int[frames];
         System.out.println("Creating Page Table");
         for (int i = 0; i < 1024 * 1024; i++) {
             PTE temp = new PTE();
@@ -313,8 +309,7 @@ public class VMSimulator {
             if (memaccess % refresh == 0) {
                 for (int i = 0; i < cur; i++) {
                     PTE temp = pageTable.get(pageFrames[i]);
-                    int t = history[i] >>> 1;
-                    history[i] = (byte) t; //Why the hell do I need to do it like this java
+                    history[i] = history[i] >>> 1;
                     if (temp.reference) {
                         history[i] += 128;
                     }
@@ -342,12 +337,40 @@ public class VMSimulator {
                     cur++;
                 } else {
                     //Evicting
+                    PTE evict = null;
+                    int[] copy = new int[history.length];
+                    System.arraycopy(history,0,copy,0,copy.length);
+                    int min =1000000000;
+                    int indexMin =0;
+                    for(int i =0; i< history.length; i++){
+                        if(pageTable.get(pageFrames[i]).reference){
+                            copy[i] +=256;
+                        }
+                        if(min > copy[i]){
+                            min = copy[i];
+                            indexMin =1;
+                        }
+                    }
+                    int pageToEvict = pageFrames[indexMin];
+                    evict = new PTE(pageTable.get(pageFrames[indexMin]));
+                    if(evict.dirty){
+                        writes++;
+                    }
+                    pageFrames[evict.frame] = entry.i;
+                    entry.frame = evict.frame;
+                    entry.v = true;
+                    evict.dirty = false;
+                    evict.reference = false;
+                    evict.v = false;
+                    evict.frame = -1;
+                    pageTable.put(pageToEvict,evict);
+
                 }
                 pageTable.put(pageNum, entry);
                 memaccess++;
             }
         }
-            System.out.println("NRU");
+            System.out.println("Aging");
             System.out.println("Number of Frames: " + frames);
             System.out.println("Total Memory Accesses: " + memaccess);
             System.out.println("Total Page Faults " + pageFaults);
