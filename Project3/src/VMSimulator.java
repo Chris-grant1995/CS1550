@@ -198,7 +198,7 @@ public class VMSimulator {
         int cur =0;
         Scanner scan = new Scanner(new File(tracefile));
         while(scan.hasNext()){
-            if(memaccess % refresh == 0){
+            if(memaccess != 0 && memaccess % refresh == 0){
                 for(int i =0; i< cur; i++){
                     PTE temp = pageTable.get(pageFrames[i]);
                     temp.reference = false;
@@ -306,8 +306,8 @@ public class VMSimulator {
         Scanner scan = new Scanner(new File(tracefile));
         while (scan.hasNext()) {
             if (memaccess % refresh == 0) {
-                System.out.println("Aging!");
-                System.out.println("Cur:" + cur);
+                //System.out.println("Aging!");
+                //System.out.println("Cur:" + cur);
                 for (int i = 0; i < cur; i++) {
                     PTE temp = pageTable.get(pageFrames[i]);
                     history[i] = history[i] >>> 1;
