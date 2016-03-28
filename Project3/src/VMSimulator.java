@@ -3,7 +3,6 @@
  */
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Hashtable;
 import java.util.Scanner;
@@ -108,7 +107,7 @@ public class VMSimulator {
         Scanner scan = new Scanner(new File(tracefile));
 
         int hands = 0;
-        System.out.println("Creating pageTable");
+        //System.out.println("Creating pageTable");
         for(int i =0; i< 1024*1024; i++){
             PTE temp = new PTE();
             pageTable.put(i,temp);
@@ -188,7 +187,7 @@ public class VMSimulator {
         int[] pageFrames = new int[frames];
         Hashtable<Integer,PTE> pageTable = new Hashtable<>();
 
-        System.out.println("Creating Page Table");
+        //System.out.println("Creating Page Table");
         for (int i =0; i< 1024*1024; i++){
             PTE temp = new PTE();
             pageTable.put(i,temp);
@@ -287,14 +286,14 @@ public class VMSimulator {
         //Ideal seems to be about 75
 
     }
-    public void aging(int frames, String tracefile, int refresh) throws FileNotFoundException, InterruptedException {
+    public void aging(int frames, String tracefile, int refresh) throws FileNotFoundException {
         int memaccess = 0;
         int pageFaults = 0;
         int writes = 0;
         int[] pageFrames = new int[frames];
         Hashtable<Integer, PTE> pageTable = new Hashtable<>();
         int[] history = new int[frames];
-        System.out.println("Creating Page Table");
+        //System.out.println("Creating Page Table");
         for (int i = 0; i < 1024 * 1024; i++) {
             PTE temp = new PTE();
             pageTable.put(i, temp);
@@ -316,8 +315,8 @@ public class VMSimulator {
                         history[i] += 128;
                     }
                     //Thread.sleep(2000);
-                    String s2 = String.format("%8s", Integer.toBinaryString(history[i] & 0xFF)).replace(' ', '0');
-                    System.out.println("Pos " + i + " Reference: " + temp.reference + " History: " + s2);
+                    //String s2 = String.format("%8s", Integer.toBinaryString(history[i] & 0xFF)).replace(' ', '0');
+                    //System.out.println("Pos " + i + " Reference: " + temp.reference + " History: " + s2);
                     temp.reference = false;
                     pageTable.put(temp.i, temp);
 
