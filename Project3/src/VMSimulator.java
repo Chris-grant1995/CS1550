@@ -260,14 +260,15 @@ public class VMSimulator {
                             else{
                                 if(!temp.reference && temp.dirty && temp.v){
                                     pageToEvict = new PTE(temp);
-                                    //continue;
+                                    continue;
                                 }
                                 else if(temp.reference && !temp.dirty && temp.v && pageToEvict == null){
                                         pageToEvict = new PTE(temp);
-                                    //continue;
+                                    continue;
                                 }
                                 else if(temp.reference && temp.dirty && temp.v && pageToEvict == null){
                                     pageToEvict = new PTE(temp);
+                                    continue;
                                 }
                             }
 
