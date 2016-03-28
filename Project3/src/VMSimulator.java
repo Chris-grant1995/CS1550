@@ -55,6 +55,7 @@ public class VMSimulator {
                     entry.frame = cur;
                     entry.v = true;
                     cur++;
+                    System.out.println(line[0] + " page fault – no eviction");
                 }
                 else{
                     //Evicting
@@ -62,6 +63,10 @@ public class VMSimulator {
                     PTE evict = pageTable.get(maxDist);
                     if(evict.dirty){
                         writes++;
+                        System.out.println(line[0] + " page fault – evict dirty");
+                    }
+                    else{
+                        System.out.println(line[0] + " page fault – evict clean");
                     }
                     pageFrames[evict.frame] = entry.i;
                     entry.frame = evict.frame;
@@ -73,6 +78,9 @@ public class VMSimulator {
                     pageTable.put(maxDist,evict);
 
                 }
+            }
+            else{
+                System.out.println(line[0] + " hit");
             }
             pageTable.put(pageNum,entry);
             memaccess++;
@@ -134,6 +142,7 @@ public class VMSimulator {
                     entry.frame = cur;
                     entry.v = true;
                     cur++;
+                    System.out.println(line[0] + " page fault – no eviction");
 
                 }
                 else{
@@ -157,6 +166,10 @@ public class VMSimulator {
                     PTE evict = pageTable.get(pageToEvict);
                     if(evict.dirty){
                         writes++;
+                        System.out.println(line[0] + " page fault – evict dirty");
+                    }
+                    else{
+                        System.out.println(line[0] + " page fault – evict clean");
                     }
                     pageFrames[evict.frame] = entry.i;
                     entry.frame = evict.frame;
@@ -168,6 +181,9 @@ public class VMSimulator {
                     pageTable.put(pageToEvict,evict);
                 }
 
+            }
+            else{
+                System.out.println(line[0] + " hit");
             }
             pageTable.put(pageNum,entry);
             memaccess++;
@@ -220,6 +236,7 @@ public class VMSimulator {
                     entry.frame = cur;
                     entry.v = true;
                     cur++;
+                    System.out.println(line[0] + " page fault – no eviction");
                 }
                 else{
                     PTE pageToEvict = null;
@@ -245,7 +262,7 @@ public class VMSimulator {
                                     pageToEvict = new PTE(temp);
                                     //continue;
                                 }
-                                    else if(temp.reference && !temp.dirty && temp.v && pageToEvict == null){
+                                else if(temp.reference && !temp.dirty && temp.v && pageToEvict == null){
                                         pageToEvict = new PTE(temp);
                                     //continue;
                                 }
@@ -262,6 +279,10 @@ public class VMSimulator {
                         entry.frame = pageToEvict.frame;
                         if(pageToEvict.dirty){
                             writes++;
+                            System.out.println(line[0] + " page fault – evict dirty");
+                        }
+                        else{
+                            System.out.println(line[0] + " page fault – evict clean");
                         }
                         pageFrames[entry.frame] = entry.i;
                         pageToEvict.v = false;
@@ -275,6 +296,9 @@ public class VMSimulator {
                     }
                 }
             }
+            else{
+                System.out.println(line[0] + " hit");
+            }
             pageTable.put(pageNum,entry);
             memaccess++;
         }
@@ -283,7 +307,7 @@ public class VMSimulator {
         System.out.println("Total Memory Accesses: "+ memaccess);
         System.out.println("Total Page Faults "+ pageFaults);
         System.out.println("Total Writes to Disk "+ writes);
-        //Ideal seems to be about 75
+        //Ideal seems to be about 32
 
     }
     public void aging(int frames, String tracefile, int refresh) throws FileNotFoundException {
@@ -338,6 +362,7 @@ public class VMSimulator {
                     entry.frame = cur;
                     entry.v = true;
                     cur++;
+                    System.out.println(line[0] + " page fault – no eviction");
                 } else {
                     //Evicting
                     PTE evict = null;
@@ -360,6 +385,10 @@ public class VMSimulator {
                     evict = new PTE(pageTable.get(pageFrames[indexMin]));
                     if(evict.dirty){
                         writes++;
+                        System.out.println(line[0] + " page fault – evict dirty");
+                    }
+                    else{
+                        System.out.println(line[0] + " page fault – evict clean");
                     }
                     pageFrames[evict.frame] = entry.i;
                     entry.frame = evict.frame;
@@ -371,6 +400,10 @@ public class VMSimulator {
                     pageTable.put(pageToEvict,evict);
 
                 }
+
+            }
+            else{
+                System.out.println(line[0] + " hit");
 
             }
             pageTable.put(pageNum, entry);
