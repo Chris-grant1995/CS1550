@@ -107,9 +107,9 @@ typedef struct cs1550_inode cs1550_inode;
  int get_path_type(const char *path, char *dir, char *fileName, char *ext){
 	int ret = -1;
 	if (strcmp(path, "/") == 0) 					 { ret = 0; }
- 	if (strcmp(directory, "\0") != 0)      { ret = 1; }
- 	if (strcmp(filename, "\0") != 0)       { ret = 2; }
- 	if (strcmp(extension, "\0") != 0)      { ret = 3; }
+ 	if (strcmp(dir, "\0") != 0)      { ret = 1; }
+ 	if (strcmp(fileName, "\0") != 0)       { ret = 2; }
+ 	if (strcmp(ext, "\0") != 0)      { ret = 3; }
  	return ret;
  }
  static void get_root(cs1550_root_directory *r) {
@@ -157,7 +157,7 @@ typedef struct cs1550_inode cs1550_inode;
  		ret = -1;
  	} else {
  		cs1550_directory_entry parentDir;
- 		getDir(&parentDir, directory);
+ 		getDir(&parentDir, dir);
 
  		int i;
  		for (i = 0; i < parentDir.nFiles; i++) {
@@ -170,12 +170,14 @@ typedef struct cs1550_inode cs1550_inode;
  		}
  	}
  	return ret;
+}
 static int getNextBlock(){
 	int res = -1;
 	FILE *f = fopen(".disk", "rb");
 	int offset = 0 - BITMAPSIZE;
 	fseek(f,offset,SEEK_END);
-	for(int i =0; i<BITMAPSIZE; i++){
+	int i =0;
+	for(i =0; i<BITMAPSIZE; i++){
 		unsigned char block = fgetc(f);
 		if(i!=0 && block != 0){
 			res =i;
@@ -226,7 +228,7 @@ static void createNewDir(char* dirName){
 		strcpy(r.directories[r.nDirectories].dname, dirName);
 		r.directories[r.nDirectories].nStartBlock = (long)(BLOCK_SIZE * blockNum);
 		r.nDirectories++;
-		updateRootOnDisk(r);
+		updateRootOnDisk(&r);
 		updateBitmap(blockNum,1);
 	}
 }
@@ -238,13 +240,13 @@ static int cs1550_getattr(const char *path, struct stat *stbuf)
 
 	 char dir[MAX_FILENAME+1];
 	 char fileName[MAX_FILENAME+1];
-	 char ext = [MAX_EXTENSION+1];
+	 char ext[MAX_EXTENSION+1];
 
 	 dir[0] = '\0';
 	 fileName[0] = '\0';
 	 ext[0] = '\0';
 
-	 sscanf(path, "/%[^/]/%[^.].%s", directory, filename, extension);
+	 sscanf(path, "/%[^/]/%[^.].%s", dir, fileName, ext);
 
 	 dir[MAX_FILENAME] = '\0';
 	 fileName[MAX_FILENAME] = '\0';
@@ -282,7 +284,7 @@ static int cs1550_getattr(const char *path, struct stat *stbuf)
 		if(fSize != -1){
 			stbuf->st_mode = S_IFREG | 0666;
 			stbuf->st_nlink = 1; //file links
-			stbuf->st_size = (size_t) fSize); //file size - make sure you replace with real size!
+			stbuf->st_size = (size_t) fSize; //file size - make sure you replace with real size!
 		}
 		else{
 			res = -ENOENT;
@@ -320,7 +322,7 @@ static int cs1550_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	(void) fi;
 	char dir[MAX_FILENAME+1];
 	char fileName[MAX_FILENAME+1];
-	char ext = [MAX_EXTENSION+1];
+	char ext [MAX_EXTENSION+1];
 
 	dir[0] = '\0';
 	fileName[0] = '\0';
@@ -345,13 +347,14 @@ static int cs1550_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		}
 	}
 	else if(pathType == 1){
-		int dirExists = dirExists(dir);
-		if(dirExists == 1){
+		int exists = dirExists(dir);
+		if(exists == 1){
 			filler(buf, ".", NULL,0);
 			filler(buf, "..", NULL, 0);
 			cs1550_directory_entry curDir;
 			getDir(&curDir, dir);
-			for(int i =0; i<curDir.nFiles; i++){
+			int i =0;
+			for(i =0; i<curDir.nFiles; i++){
 				if(strcmp(curDir.files[i].fext, "\0") == 0){
 					filler(buf,curDir.files[i].fname, NULL, 0);
 				}
