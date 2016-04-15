@@ -1,4 +1,5 @@
 /*
+Chris Grant CS 1550 Project 4
 	FUSE: Filesystem in Userspace
 	Copyright (C) 2001-2007  Miklos Szeredi <miklos@szeredi.hu>
 
@@ -19,6 +20,7 @@
 //size of a disk block
 #define	BLOCK_SIZE 512
 
+#define BITMAPSIZE 7812
 //we'll use 8.3 filenames
 #define	MAX_FILENAME 8
 #define	MAX_EXTENSION 3
@@ -81,7 +83,7 @@ struct cs1550_disk_block
 typedef struct cs1550_disk_block cs1550_disk_block;
 
 //How many pointers in an inode?
-#define NUM_POINTERS_IN_INODE (BLOCK_SIZE - sizeof(unsigned int) - sizeof(unsigned long))
+#define NUM_POINTERS_IN_INODE (BLOCK_SIZE - sizeof(unsigned int) - sizeof(unsigned long))/sizeof(unsigned long)
 
 struct cs1550_inode
 {
@@ -168,7 +170,66 @@ typedef struct cs1550_inode cs1550_inode;
  		}
  	}
  	return ret;
- }
+static int getNextBlock(){
+	int res = -1;
+	FILE *f = fopen(".disk", "rb");
+	int offset = 0 - BITMAPSIZE;
+	fseek(f,offset,SEEK_END);
+	for(int i =0; i<BITMAPSIZE; i++){
+		unsigned char block = fgetc(f);
+		if(i!=0 && block != 0){
+			res =i;
+			break;
+		}
+		offset++;
+		fseek(f,offset,SEEK_END);
+	}
+	fclose(f);
+	return res;
+
+}
+static void updateBitmap(int index, int val){
+	FILE *f = fopen(".disk","rb+");
+	fseek(f,0,SEEK_END);
+	int size = ftell(f);
+	int offset = size - BITMAPSIZE;
+	rewind(f);
+	char *buffer = (char *)malloc(size);
+	fread(buffer,size,1,f);
+	rewind(f);
+	buffer[offset+index] = val; // Works for both freeing and allocating
+	fwrite(buffer,size,1,f);
+	fclose(f);
+	free(buffer);
+}
+static void updateRootOnDisk(cs1550_root_directory *newRoot){
+	FILE *f = fopen(".disk", "rb+");
+	if(f != NULL){
+		fseek(f,0,SEEK_END);
+		int size = ftell(f);
+		char *buffer = (char *)malloc(size);
+		rewind(f);
+		fread(buffer,size,1,f);
+		rewind(f);
+		memmove(buffer,newRoot,BLOCK_SIZE);
+		fwrite(buffer,size,1,f);
+		fclose(f);
+		free(buffer);
+
+	}
+}
+static void createNewDir(char* dirName){
+	int blockNum = getNextBlock();
+	if(blockNum!= -1){
+		cs1550_root_directory r;
+		get_root(&r);
+		strcpy(r.directories[r.nDirectories].dname, dirName);
+		r.directories[r.nDirectories].nStartBlock = (long)(BLOCK_SIZE * blockNum);
+		r.nDirectories++;
+		updateRootOnDisk(r);
+		updateBitmap(blockNum,1);
+	}
+}
 static int cs1550_getattr(const char *path, struct stat *stbuf)
 {
 	int res = 0;
@@ -265,7 +326,7 @@ static int cs1550_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	fileName[0] = '\0';
 	ext[0] = '\0';
 
-	sscanf(path, "/%[^/]/%[^.].%s", directory, filename, extension);
+	sscanf(path, "/%[^/]/%[^.].%s", dir, fileName, ext);
 
 	dir[MAX_FILENAME] = '\0';
 	fileName[MAX_FILENAME] = '\0';
@@ -335,6 +396,41 @@ static int cs1550_mkdir(const char *path, mode_t mode)
 {
 	(void) path;
 	(void) mode;
+
+	char dir[MAX_FILENAME+1];
+	char fileName[MAX_FILENAME+1];
+	char ext[MAX_EXTENSION+1];
+
+	dir[0] = '\0';
+	fileName[0] = '\0';
+	ext[0] = '\0';
+
+	sscanf(path, "/%[^/]/%[^.].%s", dir, fileName, ext);
+
+	dir[MAX_FILENAME] = '\0';
+	fileName[MAX_FILENAME] = '\0';
+	ext[MAX_EXTENSION] = '\0';
+
+	int pathType = get_path_type(path,dir,fileName,ext);
+	cs1550_root_directory r;
+	get_root(&r);
+
+	if(strlen(dir) >= MAX_FILENAME){
+		return -ENAMETOOLONG;
+	}
+	else if(pathType!=1){
+		return -EPERM;
+	}
+	else if(dirExists(dir) == 1){
+		return -EEXIST;
+	}
+	else if(r.nDirectories >= MAX_DIRS_IN_ROOT){
+		//Not sure what to return here
+		return 0;
+	}
+	else{
+		createNewDir(dir);
+	}
 
 	return 0;
 }
