@@ -20,7 +20,12 @@ Chris Grant CS 1550 Project 4
 //size of a disk block
 #define	BLOCK_SIZE 512
 
-#define BITMAPSIZE 7812
+#define BITMAPSIZE 1280 //Bitmap size in bytes, gets converted down into bits when dealing with bitmap
+//5MB = 2^22 + 2^20 bits
+//(2^22 + 2^20)/512 bit blocks = 10,240
+//10240/8 bits in a byte = 1280
+
+
 //we'll use 8.3 filenames
 #define	MAX_FILENAME 8
 #define	MAX_EXTENSION 3
@@ -179,10 +184,14 @@ static int getNextBlock(){
 	int i =0;
 	for(i =0; i<BITMAPSIZE; i++){
 		unsigned char block = fgetc(f);
-		if(i!=0 && block == 0){
-			res =i;
-			break;
+		int x = 7;
+		for(x=7; x>=0; x--){
+			if(i!=0 && ((block >> x) & 0x01) == 0){
+				res = i*8 + x;
+				break;
+			}
 		}
+
 		offset++;
 		fseek(f,offset,SEEK_END);
 	}
@@ -199,7 +208,10 @@ static void updateBitmap(int index, int val){
 	char *buffer = (char *)malloc(size);
 	fread(buffer,size,1,f);
 	rewind(f);
-	buffer[offset+index] = val; // Works for both freeing and allocating, 1 for allocating, 0 for free
+	//Bit shifting magic here
+	char pos = buffer[offset + (index/8)];
+	pos |= val << (index % 8);
+	buffer[offset+(index/8)] = pos;
 	fwrite(buffer,size,1,f);
 	fclose(f);
 	free(buffer);
