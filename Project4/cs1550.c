@@ -179,7 +179,7 @@ static int getNextBlock(){
 	int i =0;
 	for(i =0; i<BITMAPSIZE; i++){
 		unsigned char block = fgetc(f);
-		if(i!=0 && block != 0){
+		if(i!=0 && block == 0){
 			res =i;
 			break;
 		}
@@ -199,11 +199,12 @@ static void updateBitmap(int index, int val){
 	char *buffer = (char *)malloc(size);
 	fread(buffer,size,1,f);
 	rewind(f);
-	buffer[offset+index] = val; // Works for both freeing and allocating
+	buffer[offset+index] = val; // Works for both freeing and allocating, 1 for allocating, 0 for free
 	fwrite(buffer,size,1,f);
 	fclose(f);
 	free(buffer);
 }
+
 static void updateRootOnDisk(cs1550_root_directory *newRoot){
 	FILE *f = fopen(".disk", "rb+");
 	if(f != NULL){
@@ -232,6 +233,12 @@ static void createNewDir(char* dirName){
 		updateBitmap(blockNum,1);
 	}
 }
+/*
+ * Called whenever the system wants to know the file attributes, including
+ * simply whether the file exists or not.
+ *
+ * man -s 2 stat will show the fields of a stat structure
+ */
 static int cs1550_getattr(const char *path, struct stat *stbuf)
 {
 	int res = 0;
@@ -390,14 +397,13 @@ static int cs1550_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	filler(buf, newpath + 1, NULL, 0);
 	*/
 }
-
 /*
  * Creates a directory. We can ignore mode since we're not dealing with
  * permissions, as long as getattr returns appropriate ones for us.
  */
 static int cs1550_mkdir(const char *path, mode_t mode)
 {
-	(void) path;
+	//(void) path;
 	(void) mode;
 
 	char dir[MAX_FILENAME+1];
