@@ -102,14 +102,8 @@ struct cs1550_inode
 
 typedef struct cs1550_inode cs1550_inode;
 
-/*
- * Called whenever the system wants to know the file attributes, including
- * simply whether the file exists or not.
- *
- * man -s 2 stat will show the fields of a stat structure
- */
  //Helper Funcs
- int get_path_type(const char *path, char *dir, char *fileName, char *ext){
+ int getPathType(const char *path, char *dir, char *fileName, char *ext){
 	int ret = -1;
 	if (strcmp(path, "/") == 0) 					 { ret = 0; }
  	if (strcmp(dir, "\0") != 0)      { ret = 1; }
@@ -117,7 +111,7 @@ typedef struct cs1550_inode cs1550_inode;
  	if (strcmp(ext, "\0") != 0)      { ret = 3; }
  	return ret;
  }
- static void get_root(cs1550_root_directory *r) {
+ static void getRoot(cs1550_root_directory *r) {
  	FILE *f = fopen(".disk", "rb");
  	if (f != NULL) {
  		fread(r, sizeof(cs1550_root_directory), 1, f);
@@ -127,7 +121,7 @@ typedef struct cs1550_inode cs1550_inode;
  static void getDir(cs1550_directory_entry *fill, char *dir) {
  	long startBlock = 0;
  	cs1550_root_directory r;
- 	get_root(&r);
+ 	getRoot(&r);
  	int i;
  	for (i = 0; i < r.nDirectories; i++) {
  		if (strcmp(dir, r.directories[i].dname) == 0) {
@@ -146,7 +140,7 @@ typedef struct cs1550_inode cs1550_inode;
  static int dirExists(char *dir) {
  	int ret = 0;
  	cs1550_root_directory r;
- 	get_root(&r);
+ 	getRoot(&r);
  	int i;
  	for (i = 0; i < r.nDirectories; i++) {
  		if (strcmp(dir, r.directories[i].dname) == 0) {
@@ -237,12 +231,53 @@ static void createNewDir(char* dirName){
 	int blockNum = getNextBlock();
 	if(blockNum!= -1){
 		cs1550_root_directory r;
-		get_root(&r);
+		getRoot(&r);
 		strcpy(r.directories[r.nDirectories].dname, dirName);
 		r.directories[r.nDirectories].nStartBlock = (long)(BLOCK_SIZE * blockNum);
 		r.nDirectories++;
 		updateRootOnDisk(&r);
 		updateBitmap(blockNum,1);
+	}
+}
+void writeBlockToDisk(cs1550_disk_block *block, long seek){
+	FILE *f = fopen(".disk","rb+");
+	fseek(f,0,SEEK_END);
+	int size = ftell(f);
+	char *buffer = (char *)malloc(size);
+	rewind(f);
+	fread(buffer,size,1,f);
+	rewind(f);
+	memmove(buffer+seek, block, BLOCK_SIZE);
+	fwrite(buffer,size,1,f);
+	fclose(f);
+	free(buffer);
+
+
+}
+void update_directory_on_disk(cs1550_directory_entry *new_dir, char *directory) {
+	cs1550_root_directory root;
+	getRoot(&root);
+	int i;
+	for (i = 0; i < root.nDirectories; i++) {
+		if (strcmp(directory, root.directories[i].dname) == 0) {
+			// get start block of this directory on .disk
+			long dir_nStartBlock = root.directories[i].nStartBlock;
+			//replace it on disk wit the new updated directory
+			FILE *file_ptr = fopen(".disk", "rb+");
+			if (file_ptr != NULL) {
+				fseek(file_ptr, 0, SEEK_END);
+				int disk_size = ftell(file_ptr);
+				rewind(file_ptr);
+				char *disk_buffer = (char *)malloc(disk_size);
+				fread(disk_buffer, disk_size, 1, file_ptr);
+				rewind(file_ptr);
+				memmove(disk_buffer+(int)dir_nStartBlock, new_dir, BLOCK_SIZE);
+				fwrite(disk_buffer, disk_size, 1, file_ptr);
+				free(disk_buffer);
+				fclose(file_ptr);
+			}
+			break;
+		}
 	}
 }
 /*
@@ -278,7 +313,7 @@ static int cs1550_getattr(const char *path, struct stat *stbuf)
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
 	} else {
-		int pathType = get_path_type(path,dir,fileName, ext);
+		int pathType = getPathType(path,dir,fileName, ext);
 		if(pathType == 1){
 			//subdirectory
 			if(dirExists(dir) == 1){
@@ -353,13 +388,13 @@ static int cs1550_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	fileName[MAX_FILENAME] = '\0';
 	ext[MAX_EXTENSION] = '\0';
 
-	int pathType = get_path_type(path,dir,fileName,ext);
+	int pathType = getPathType(path,dir,fileName,ext);
 
 	if(pathType == 0){
 		filler(buf, ".", NULL, 0);
 		filler(buf, "..", NULL, 0);
 		cs1550_root_directory r;
-		get_root(&r);
+		getRoot(&r);
 		int i;
 		for(i = 0; i < r.nDirectories; i++) {
 			filler(buf, r.directories[i].dname, NULL, 0);
@@ -432,9 +467,9 @@ static int cs1550_mkdir(const char *path, mode_t mode)
 	fileName[MAX_FILENAME] = '\0';
 	ext[MAX_EXTENSION] = '\0';
 
-	int pathType = get_path_type(path,dir,fileName,ext);
+	int pathType = getPathType(path,dir,fileName,ext);
 	cs1550_root_directory r;
-	get_root(&r);
+	getRoot(&r);
 
 	if(strlen(dir) >= MAX_FILENAME){
 		return -ENAMETOOLONG;
@@ -469,12 +504,80 @@ static int cs1550_rmdir(const char *path)
  * Does the actual creation of a file. Mode and dev can be ignored.
  *
  */
+
 static int cs1550_mknod(const char *path, mode_t mode, dev_t dev)
 {
 	(void) mode;
 	(void) dev;
-	(void) path;
-	return 0;
+
+	int res =0;
+	char dir[MAX_FILENAME+1];
+	char fileName[MAX_FILENAME+1];
+	char ext[MAX_EXTENSION+1];
+
+	dir[0] = '\0';
+	fileName[0] = '\0';
+	ext[0] = '\0';
+
+	sscanf(path, "/%[^/]/%[^.].%s", dir, fileName, ext);
+
+	dir[MAX_FILENAME] = '\0';
+	fileName[MAX_FILENAME] = '\0';
+	ext[MAX_EXTENSION] = '\0';
+
+	int pathType = getPathType(path,dir,fileName,ext);
+	int fileSize = fileExists(dir,fileName, ext, pathType);
+
+	if(pathType<2){
+		res = -EPERM;
+	}
+	else if(strlen(fileName) > MAX_FILENAME || strlen(ext) > MAX_EXTENSION){
+		res = -ENAMETOOLONG;
+	}
+	else if(fileSize!= -1){
+		res = -EEXIST;
+	}
+	else{
+		cs1550_root_directory  r;
+		getRoot(&r);
+		int i =0;
+		for(i =0; i<r.nDirectories; i++){
+			if(strcmp(r.directories[i].dname, dir) == 0){
+				int blockNum = getNextBlock();
+				long fileStart = (long)(blockNum * BLOCK_SIZE);
+				updateBitmap(blockNum, 1);
+
+				cs1550_directory_entry parent;
+				getDir(&parent, dir);
+				strcpy(parent.files[parent.nFiles].fname,fileName);
+				strcpy(parent.files[parent.nFiles].fext,ext);
+
+				parent.files[parent.nFiles].fsize =0;
+				parent.files[parent.nFiles].nStartBlock = fileStart;
+				parent.nFiles++;
+
+				int parentDirBlock = r.directories[i].nStartBlock;
+				FILE *f = fopen(".disk", "rb+");
+				if(f != NULL){
+					fseek(f,0,SEEK_END);
+					int size = ftell(f);
+					rewind(f);
+					char * buffer = (char*) malloc(size);
+					fread(buffer,size,1,f);
+
+					rewind(f);
+					memmove(buffer + parentDirBlock,&parent,BLOCK_SIZE);
+					fwrite(buffer,size,1,f);
+					fclose(f);
+					free(buffer);
+				}
+
+			}
+		}
+	}
+
+
+	return res;
 }
 
 /*
@@ -517,16 +620,105 @@ static int cs1550_read(const char *path, char *buf, size_t size, off_t offset,
 static int cs1550_write(const char *path, const char *buf, size_t size,
 			  off_t offset, struct fuse_file_info *fi)
 {
-	(void) buf;
-	(void) offset;
 	(void) fi;
-	(void) path;
 
 	//check to make sure path exists
 	//check that size is > 0
 	//check that offset is <= to the file size
 	//write data
 	//set size (should be same as input) and return, or error
+
+	int res =0;
+	char dir[MAX_FILENAME+1];
+	char fileName[MAX_FILENAME+1];
+	char ext[MAX_EXTENSION+1];
+
+	dir[0] = '\0';
+	fileName[0] = '\0';
+	ext[0] = '\0';
+
+	sscanf(path, "/%[^/]/%[^.].%s", dir, fileName, ext);
+
+	dir[MAX_FILENAME] = '\0';
+	fileName[MAX_FILENAME] = '\0';
+	ext[MAX_EXTENSION] = '\0';
+
+	int pathType = getPathType(path,dir,fileName,ext);
+	int fileSize = fileExists(dir,fileName, ext, pathType);
+
+	if(dirExists(dir) == 1 && fileSize != -1 && size > 0 && pathType>1){
+		cs1550_directory_entry parent;
+		getDir(&parent,dir);
+		int i =0;
+		for(i =0; i<parent.nFiles; i++){
+			if((pathType == 2 && strcmp(parent.files[i].fname, fileName) == 0)  || (pathType == 3 && strcmp(parent.files[i].fname,fileName) == 0 && strcmp(parent.files[i].fext,ext) ==0)){
+				if(offset > parent.files[i].fsize){
+					return -EFBIG;
+				}
+				else{
+					long startBlock = parent.files[i].nStartBlock;
+					int offsetBlock = offset/BLOCK_SIZE;
+
+					long s = startBlock;
+					long t = 0;
+					FILE * f = fopen(".disk", "rb+");
+					int x =0;
+					for(x =0; x<=offsetBlock;x++ ){
+						t = s;
+						fseek(f,s,SEEK_SET);
+						cs1550_disk_block block;
+						fread(&block, BLOCK_SIZE,1,f);
+						s = block.magic_number;
+					}
+					rewind(f);
+
+					int offsetFromBlock = (int) offset - (offsetBlock*BLOCK_SIZE);
+
+					int count = offsetBlock;
+					s = startBlock;
+					fseek(f,s,SEEK_SET);
+					cs1550_disk_block curBlock;
+					fread(&curBlock,BLOCK_SIZE,1,f);
+					int buffer= 0;
+					for(buffer =0; buffer<strlen(buf); buffer++){
+						if(count<MAX_DATA_IN_BLOCK){
+							curBlock.data[count] = (char)buf[buffer];
+							count++;
+						}
+						else{
+							count =0;
+							if(curBlock.magic_number != 0){
+								writeBlockToDisk(&curBlock,s);
+								s = curBlock.magic_number;
+								fseek(f,s,SEEK_SET);
+								fread(&curBlock,BLOCK_SIZE,1,f);
+							}
+							else{
+								int curSeek = s;
+								int nextBlock = getNextBlock();
+								s = nextBlock * BLOCK_SIZE;
+								curBlock.magic_number = s;
+								writeBlockToDisk(&curBlock,curSeek);
+								fseek(f,s,SEEK_SET);
+								fread(&curBlock,BLOCK_SIZE,1,f);
+								updateBitmap(nextBlock,1);
+							}
+						}
+						if(buffer == strlen(buf) -1 ){
+							writeBlockToDisk(&curBlock, s);
+							count =0;
+						}
+					}
+					fclose(f);
+					int oldSize = parent.files[i].fsize;
+					int newSize = (oldSize - (oldSize - offset)) + (size - (oldSize - offset));
+					parent.files[i].fsize = newSize;
+					update_directory_on_disk(&parent,dir);
+
+				}
+			}
+		}
+	}
 
 	return size;
 }
@@ -590,6 +782,7 @@ static int cs1550_flush (const char *path , struct fuse_file_info *fi)
 
 	return 0; //success!
 }
+
 
 
 //register our new functions as the implementations of the syscalls
