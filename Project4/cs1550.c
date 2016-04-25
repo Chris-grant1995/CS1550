@@ -102,8 +102,10 @@ struct cs1550_inode
 
 typedef struct cs1550_inode cs1550_inode;
 
+//Helper Functions
 
-void parsePath(const char *path, char *dir, char *fileName, char *ext) {
+//Gets and parses path from path string, and loads into 3 distinct variables, used as timesaver.
+static void getPath(const char *path, char *dir, char *fileName, char *ext) {
 	dir[0] = '\0';
 	fileName[0] = '\0';
 	ext[0] = '\0';
@@ -113,17 +115,17 @@ void parsePath(const char *path, char *dir, char *fileName, char *ext) {
 	ext[MAX_EXTENSION] = '\0';
 }
 
-
+//Used to determine what type a path the user typed in, 0 for root, 1 for directory, 2&3 for file
 static int getPathType(const char *path, char *dir, char *fileName, char *ext) {
-	int res = -1;
-	if (strcmp(path, "/") == 0) { res = 0; }
-	if (strcmp(dir, "\0") != 0)      { res = 1; }
-	if (strcmp(fileName, "\0") != 0)       { res = 2; }
-	if (strcmp(ext, "\0") != 0)      { res = 3; }
-	return res;
+	int ret = -1;
+	if (strcmp(path, "/") == 0) { ret = 0; }
+	if (strcmp(dir, "\0") != 0)      { ret = 1; }
+	if (strcmp(fileName, "\0") != 0)       { ret = 2; }
+	if (strcmp(ext, "\0") != 0)      { ret = 3; }
+	return ret;
 }
 
-
+//Gets the root from .disk and loads into memory
 static void getRoot(cs1550_root_directory *root) {
 	FILE *f = fopen(".disk", "rb");
 	if (f != NULL) {
@@ -132,7 +134,7 @@ static void getRoot(cs1550_root_directory *root) {
 	}
 }
 
-
+//Updates the root on .disk
 static void updateRootOnDisk(cs1550_root_directory *root) {
 	FILE *f = fopen(".disk", "rb+");
 	if (f != NULL) {
@@ -149,11 +151,8 @@ static void updateRootOnDisk(cs1550_root_directory *root) {
 	}
 }
 
-/*
- * Get directory struct from .disk via the root
- */
+//Gets a directory from .disk and loads into memory
 static void getDir(cs1550_directory_entry *fill, char *directory) {
-	// get the start block number of the directory we're interested in
 	long startBlock = 0;
 	cs1550_root_directory r;
 	getRoot(&r);
@@ -166,25 +165,20 @@ static void getDir(cs1550_directory_entry *fill, char *directory) {
 
 	FILE *f = fopen(".disk", "rb");
 	if (f != NULL) {
-		// set the fill directory entry passed in to the directory we found
 		fseek(f, startBlock, SEEK_SET);
 		fread(fill, BLOCK_SIZE, 1, f);
 		fclose(f);
 	}
 }
 
-/*
- * update a directory's entry in root
- */
+//Updates directory entry on .disk
 void updateDir(cs1550_directory_entry *newDir, char *dir) {
 	cs1550_root_directory r;
 	getRoot(&r);
 	int i=0;
 	for (i = 0; i < r.nDirectories; i++) {
 		if (strcmp(dir, r.directories[i].dname) == 0) {
-			// get start block of this directory on .disk
 			long startBlock = r.directories[i].nStartBlock;
-			//replace it on disk wit the new updated directory
 			FILE *f = fopen(".disk", "rb+");
 			if (f != NULL) {
 				fseek(f, 0, SEEK_END);
@@ -203,31 +197,27 @@ void updateDir(cs1550_directory_entry *newDir, char *dir) {
 	}
 }
 
-/*
- * Check if directory exists.
- * If directory exists, returns 1.
- * If directory doesn't exist, returns 0.
- */
+//Checks if directory exists, returns 0 if doesn't, returns 1 if does
 static int dirExists(char *dir) {
-	int res = 0;
 	cs1550_root_directory r;
 	getRoot(&r);
 	int i=0;
 	for (i = 0; i < r.nDirectories; i++) {
 		if (strcmp(dir, r.directories[i].dname) == 0) {
-			res = 1;
+			return 1;
 		}
 	}
-	return res;
+	return 0;
 }
 
-
-static int fileExists(char *dir, char *fileName, char *ext, int path_type) {
-	int res = -1;
+//gets the size of the file specificed, if it exists, if not returns -1
+static int getFileSize(char *dir, char *fileName, char *ext, int path_type) {
+	int ret = -1;
 
 	if (dirExists(dir) == 0) {
-		res = -1;
-	} else {
+		return -1;
+	}
+	else {
 		cs1550_directory_entry parent_dir;
 		getDir(&parent_dir, dir);
 
@@ -235,17 +225,17 @@ static int fileExists(char *dir, char *fileName, char *ext, int path_type) {
 		int i;
 		for (i = 0; i < parent_dir.nFiles; i++) {
 			if (path_type == 2 && strcmp(fileName, parent_dir.files[i].fname) == 0) {
-				res = (int)parent_dir.files[i].fsize;
+				ret = (int)parent_dir.files[i].fsize;
 			} else if (path_type == 3 && strcmp(fileName, parent_dir.files[i].fname) == 0 && strcmp(ext, parent_dir.files[i].fext) == 0 ) {
-					res = (int)parent_dir.files[i].fsize;
+					ret = (int)parent_dir.files[i].fsize;
 			}
 		}
 	}
-	return res;
+	return ret;
 }
-
+//Returns the next free block from the bitmap
 static int getNextBlock() {
-		int res = -1;
+		int ret = -1;
 		FILE *f = fopen(".disk", "rb");
 		int offset = 0 - BITMAPSIZE;
 		fseek(f,offset,SEEK_END);
@@ -253,9 +243,10 @@ static int getNextBlock() {
 		for(i =0; i<BITMAPSIZE; i++){
 			unsigned char block = fgetc(f);
 			int x = 7;
+			//Bitshifting Magic
 			for(x=7; x>=0; x--){
 				if(i!=0 && ((block >> x) & 0x01) == 0){
-					res = i*8 + x;
+					ret = i*8 + x;
 					break;
 				}
 			}
@@ -264,10 +255,10 @@ static int getNextBlock() {
 			fseek(f,offset,SEEK_END);
 		}
 		fclose(f);
-		return res;
+		return ret;
 
 }
-
+//Updates the bitmap value at position index to value stored in val, works for both allocating and freeing
  static void updateBitmap(int index, int val){
  	FILE *f = fopen(".disk","rb+");
  	fseek(f,0,SEEK_END);
@@ -288,18 +279,10 @@ static int getNextBlock() {
  	free(buffer);
  }
 
-/*
- * Write the given directory to the .disk file and update the root entry on disk.
- *
- * Returns the start block number on .disk of that newly created directory on success.
- * Returns -1 on failure.
- */
+//Creates a new empty directory on .disk
 static void createDir(char *dir) {
-	// first get the block number of the next free block (from the bitmap).
 	int block_number = getNextBlock();
 	if (block_number != -1) {
-			// Update root entry, update free block tracking bitmap
-			// update root directory information on .disk
 			cs1550_root_directory r;
 			getRoot(&r);
 			strcpy(r.directories[r.nDirectories].dname, dir);
@@ -314,9 +297,7 @@ static void createDir(char *dir) {
 
 
 
-/*
- * Write disk block to disk given a bloc and a seek position
- */
+//Writes given block to given position
 void writeBlock(cs1550_disk_block *fileBlock, long seek) {
 	FILE *f = fopen(".disk", "rb+");
 	if (f != NULL) {
@@ -349,19 +330,17 @@ static int cs1550_getattr(const char *path, struct stat *stbuf)
 	char fileName[MAX_FILENAME + 1];
 	char ext[MAX_EXTENSION + 1];
 
-	parsePath(path, dir, fileName, ext);
+	getPath(path, dir, fileName, ext);
 
 	int pathType = getPathType(path, dir, fileName, ext);
 
 	if (pathType == 0) {
-		/*
-		 * Path is the root dir
-		 */
+		//Root
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
 	}
 	else if (pathType == 1) {
-
+		//Directory
 		if (dirExists(dir) == 1) {
 
 			 stbuf->st_mode = S_IFDIR | 0755;
@@ -374,8 +353,8 @@ static int cs1550_getattr(const char *path, struct stat *stbuf)
 
 	}
 	else if (pathType == 2 || pathType == 3) {
-
-		int size = fileExists(dir, fileName, ext, pathType);
+		//File
+		int size = getFileSize(dir, fileName, ext, pathType);
 		if (size != -1) {
 			stbuf->st_mode = S_IFREG | 0666;
 			stbuf->st_nlink = 1; //file links
@@ -400,14 +379,11 @@ static int cs1550_mkdir(const char *path, mode_t mode)
 {
 	(void) mode;
 
-	/*
-	 * Start by parsing the path name.
-	 */
 	char dir[MAX_FILENAME + 1];
 	char fileName[MAX_FILENAME + 1];
 	char ext[MAX_EXTENSION + 1];
 
-	parsePath(path, dir, fileName, ext);
+	getPath(path, dir, fileName, ext);
 	int pathType = getPathType(path, dir, fileName, ext);
 
 	if (strlen(dir) >= MAX_FILENAME) {
@@ -445,7 +421,7 @@ static int cs1550_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	char dir[MAX_FILENAME + 1];
 	char fileName[MAX_FILENAME + 1];
 	char ext[MAX_EXTENSION + 1];
-	parsePath(path, dir, fileName, ext);
+	getPath(path, dir, fileName, ext);
 	int pathType = getPathType(path, dir, fileName, ext);
 
 	if (pathType == 0) {
@@ -509,27 +485,22 @@ static int cs1550_read(const char *path, char *buf, size_t size, off_t offset,
 	char dir[MAX_FILENAME + 1];
 	char fileName[MAX_FILENAME + 1];
 	char ext[MAX_EXTENSION + 1];
-	parsePath(path, dir, fileName, ext);
+	getPath(path, dir, fileName, ext);
 	int pathType = getPathType(path, dir, fileName, ext);
-	int fileSize = fileExists(dir, fileName, ext, pathType);
+	int fileSize = getFileSize(dir, fileName, ext, pathType);
 
 	if (pathType < 2) {
-		return -EISDIR; //path is a directory
+		return -EISDIR;
 	}
 	else if (dirExists(dir) == 1 && fileSize != -1 && size > 0){
-
-		// get the parent directory of the file
 		cs1550_directory_entry parentDir;
 		getDir(&parentDir, dir);
 		int i =0;
 		for (i = 0; i < parentDir.nFiles; i++) {
 			if ((pathType==2 && strcmp(parentDir.files[i].fname, fileName)==0) || (pathType==3 && strcmp(parentDir.files[i].fname, fileName) == 0 && strcmp(parentDir.files[i].fext, ext) == 0)) {
 				if (offset <= parentDir.files[i].fsize) {
-					//Locate the starting block of the file
 					long startBlock = parentDir.files[i].nStartBlock;
-					//find the block number the offset is located in
 					int blockNum = offset / BLOCK_SIZE;
-					//locate the start of the block that contains the offset (store in block_start)
 
 					long seek = startBlock;
 					long bStart = 0;
@@ -543,10 +514,7 @@ static int cs1550_read(const char *path, char *buf, size_t size, off_t offset,
 						seek = fileBlock.magic_number;
 					}
 					rewind(f);
-					//Locate the first byte to be modified relative to the BLOCK (not file) using: the given "global" offset
-					//and the number of the block that contains the offset
 					int off = (int)offset - (blockNum * BLOCK_SIZE);
-					//start reading from the offset that was just found relative to the file block
 					int count = off;
 					int index = 0;
 					seek = bStart;
@@ -554,7 +522,6 @@ static int cs1550_read(const char *path, char *buf, size_t size, off_t offset,
 						fseek(f, seek, SEEK_SET);
 						cs1550_disk_block curBlock;
 						fread(&curBlock, BLOCK_SIZE, 1, f);
-						//keep reading  until the end of block is reached
 						if (count < MAX_DATA_IN_BLOCK) {
 							buf[index] = (char)curBlock.data[count];
 							count++;
@@ -587,29 +554,22 @@ static int cs1550_write(const char *path, const char *buf, size_t size,
 	char dir[MAX_FILENAME + 1];
 	char fileName[MAX_FILENAME + 1];
 	char ext[MAX_EXTENSION + 1];
-	parsePath(path, dir, fileName, ext);
+	getPath(path, dir, fileName, ext);
 	int pathType = getPathType(path, dir, fileName, ext);
-	int fileSize = fileExists(dir, fileName, ext, pathType);
+	int fileSize = getFileSize(dir, fileName, ext, pathType);
 
-	//check to make sure path exists and check that size is > 0
 	if (dirExists(dir) == 1 && pathType >= 2 && fileSize != -1 && size > 0) {
-		// get the parent directory of the file
 		cs1550_directory_entry parentDir;
 		getDir(&parentDir, dir);
 		int i =0;
-		// find the file in the parent directory
 		for (i = 0; i < parentDir.nFiles; i++) {
 			if ((pathType==2 && strcmp(parentDir.files[i].fname, fileName)==0) || (pathType==3 && strcmp(parentDir.files[i].fname, fileName) == 0 && strcmp(parentDir.files[i].fext, ext) == 0)) {
-				//check that offset is <= to the file size
 				if (offset > parentDir.files[i].fsize) {
 					return -EFBIG;
 				}
 				else {
-					//Locate the starting block of the file
 					long startBlock = parentDir.files[i].nStartBlock;
-					//find the block number the offset is located in
 					int blockNum = offset / BLOCK_SIZE;
-					//locate the start of the block that contains the offset (store in block_start)
 
 					long seek = startBlock;
 					long bStart = 0;
@@ -623,10 +583,7 @@ static int cs1550_write(const char *path, const char *buf, size_t size,
 						seek = fileBlock.magic_number;
 					}
 					rewind(f);
-					//Locate the first byte to be modified relative to the BLOCK (not file) using: the given "global" offset
-					//and the number of the block that contains the offset
 					int off = (int)offset - (blockNum * BLOCK_SIZE);
-					//start overwriting from the offset that was just found relative to the file block
 					int index;
 					int count = off;
 					seek = bStart;
@@ -634,52 +591,38 @@ static int cs1550_write(const char *path, const char *buf, size_t size,
 					cs1550_disk_block curBlock;
 					fread(&curBlock, BLOCK_SIZE, 1, f);
 					for (index = 0; index < strlen(buf); index++) {
-						//keep writing until the end of block is reached
 						if (count < MAX_DATA_IN_BLOCK) {
 							curBlock.data[count] = (char)buf[index];
 							count++;
 						}
 						else {
-							count = 0; //reset the counter
-							//move on to the next block
+							count = 0;
 							if (curBlock.magic_number != 0) {
-								//write the block up to this point in the buffer to disk
 								writeBlock(&curBlock, seek);
-								//there exists an already allocated block past this current block that we can continue writing to
 								seek = curBlock.magic_number;
 								fseek(f, seek, SEEK_SET);
 								fread(&curBlock, BLOCK_SIZE, 1, f);
 							}
 							else {
-								//this was the last block in the file
-								//update the block that was just written with the new next block pointer
-								//allocate a new block and continue
 								long cSeek = seek;
 								int nextBlock = getNextBlock();
 								seek = nextBlock * BLOCK_SIZE;
-								//write the block up to this point in the buffer to disk
 								curBlock.magic_number = seek;
 								writeBlock(&curBlock, cSeek);
 								fseek(f, seek, SEEK_SET);
 								fread(&curBlock, BLOCK_SIZE, 1, f);
-								//update bit map to indicate new blocks have been allocated
 								updateBitmap(nextBlock, 1);
 							}
 						}
-						// if the end of block is not reached and buffer is done we still want to write this block to disk
 						if (index == strlen(buf)-1) {
 							writeBlock(&curBlock, seek);
-							count = 0;//reset the counter
+							count = 0;
 						}
 					}
 					fclose(f);
-					//set size (should be same as input) and return, or error
-					//in case an offset other than 0 is given calculate the change in size and return an updated size
-					//change in size = [old - (old-offset)] + [new - (old-offset)]
 					int old = parentDir.files[i].fsize;
 					int newSize =  (size - (old - offset)) + (old - (old - offset));
 					parentDir.files[i].fsize = newSize;
-					//update file size in parent directory on disk
 					updateDir(&parentDir, dir);
 					ret = newSize;
 				}
@@ -702,9 +645,9 @@ static int cs1550_mknod(const char *path, mode_t mode, dev_t dev)
 	char dir[MAX_FILENAME + 1];
 	char fileName[MAX_FILENAME + 1];
 	char ext[MAX_EXTENSION + 1];
-	parsePath(path, dir, fileName, ext);
+	getPath(path, dir, fileName, ext);
 	int pathType = getPathType(path, dir, fileName, ext);
-	int fileSize = fileExists(dir, fileName, ext, pathType);
+	int fileSize = getFileSize(dir, fileName, ext, pathType);
 
 	if (pathType < 2) {
 		return -EPERM;
@@ -716,19 +659,14 @@ static int cs1550_mknod(const char *path, mode_t mode, dev_t dev)
 			return -ENAMETOOLONG;
 	}
 	else {
-			// file doesn't exist. add it.
-			// traverse from the root block, locate the subdirectory in which the new file will reside
 			cs1550_root_directory r;
 			getRoot(&r);
 			int i =0;
 			for(i = 0; i < r.nDirectories; i++) {
 				if (strcmp(r.directories[i].dname, dir) == 0) {
-					// get a new starting block for this file according to bitmap
 					int blockNum = getNextBlock();
 					long startBlock = (long)(BLOCK_SIZE * blockNum);
-					// allocate the file by updating the bitmap
 					updateBitmap(blockNum, 1);
-					// update parent dir
 					cs1550_directory_entry parentDir;
 					getDir(&parentDir, dir);
 					strcpy(parentDir.files[parentDir.nFiles].fname, fileName);
@@ -736,7 +674,6 @@ static int cs1550_mknod(const char *path, mode_t mode, dev_t dev)
 					parentDir.files[parentDir.nFiles].fsize = 0;
 					parentDir.files[parentDir.nFiles].nStartBlock = startBlock;
 					parentDir.nFiles++;
-					// Write the updated subdirectory (with the new file entry) to .disk
 					int parentDirMagicNum = r.directories[i].nStartBlock;
 					FILE *f = fopen(".disk", "rb+");
 					if (f != NULL) {
@@ -746,9 +683,7 @@ static int cs1550_mknod(const char *path, mode_t mode, dev_t dev)
 						char *buffer = (char *)malloc(diskSize);
 						fread(buffer, diskSize, 1, f);
 						rewind(f);
-						// write new updated parent directory to buffer
 						memmove(buffer+parentDirMagicNum, &parentDir, BLOCK_SIZE);
-						// write updated disk_buffer to .disk
 						fwrite(buffer, diskSize, 1, f);
 						fclose(f);
 						free(buffer);
@@ -771,9 +706,9 @@ static int cs1550_unlink(const char *path)
 	char dir[MAX_FILENAME + 1];
 	char fileName[MAX_FILENAME + 1];
 	char ext[MAX_EXTENSION + 1];
-	parsePath(path, dir, fileName, ext);
+	getPath(path, dir, fileName, ext);
 	int pathType = getPathType(path, dir, fileName, ext);
-	int fileSize = fileExists(dir, fileName, ext, pathType);
+	int fileSize = getFileSize(dir, fileName, ext, pathType);
 
 	if (pathType < 2) {
 		return -EISDIR;
@@ -782,14 +717,11 @@ static int cs1550_unlink(const char *path)
 		return -ENOENT;
 	}
 	else {
-		//file exists
-		//get the parent directory of the file
 		cs1550_directory_entry parentDir;
 		getDir(&parentDir, dir);
 		int i =0;
 		for (i = 0; i < parentDir.nFiles; i++) {
 			if ((pathType==2 && strcmp(parentDir.files[i].fname, fileName)==0) || (pathType==3 && strcmp(parentDir.files[i].fname, fileName) == 0 && strcmp(parentDir.files[i].fext, ext) == 0)) {
-				//Locate the starting block of the file
 				long startBlock = parentDir.files[i].nStartBlock;
 				long seek = startBlock;
 				FILE *f = fopen(".disk", "rb");
@@ -797,14 +729,11 @@ static int cs1550_unlink(const char *path)
 					fseek(f, seek, SEEK_SET);
 					cs1550_disk_block curBlock;
 					fread(&curBlock, BLOCK_SIZE, 1, f);
-					//remove current block from disk by replacing it with an empty one
 					cs1550_disk_block empty;
 					memset(&empty, 0, BLOCK_SIZE);
 					writeBlock(&empty, seek);
-					//update bitmap
 					int index = seek / BLOCK_SIZE;
 					updateBitmap(index, 0);
-					//if there's a next block set seek to it
 					if (curBlock.magic_number != 0) {
 						seek = curBlock.magic_number;
 					}
